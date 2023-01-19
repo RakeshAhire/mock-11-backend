@@ -6,16 +6,18 @@ const { userModel } = require("../Model/user.model");
 
 const userRoutes=Router()
 
+userRoutes.get('/',async(req,res)=>{
+    const user= await userModel.find()
+    res.send(user)
+})
+
 userRoutes.post("/signup", async (req, res) => {
     const payload = req.body;
-    const checkUser = UserModel.find({ email: payload.email });
-    if(checkUser){
-        res.send({"msg":"user already register"});
-    }
+    // console.log('payload: ', payload);
     try {
       bcrypt.hash(payload.password, 5, async function (err, hash) {
         // Store hash in your password DB.
-        const user = new UserModel({ ...payload, password: hash });
+        const user = new userModel({ ...payload, password: hash });
         await user.save();
         res.send({ msg: "sign up successfull" });
       });
@@ -27,15 +29,15 @@ userRoutes.post("/signup", async (req, res) => {
   
   userRoutes.post("/login", async (req, res) => {
     const payload = req.body;
+    // console.log('payload: ', payload);
     const user = await userModel.findOne({ email: payload.email });
 
     if(user){
       try {
           bcrypt.compare( payload.password, user.password, async function (err, result) {
-              // result == true
               if (result) {
                 const token = jwt.sign({ userID: user._id, username: user.username },"shhhhh");
-                res.send({ "msg": "login Success", token });
+                res.send({ "msg": "login Success", "token":token });
               } else {
                 res.send({ "msg": "login failed/wrong credential", err });
               }
@@ -51,3 +53,5 @@ userRoutes.post("/signup", async (req, res) => {
     }
     
   });
+
+  module.exports={userRoutes}
